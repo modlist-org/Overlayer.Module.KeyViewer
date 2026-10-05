@@ -1,5 +1,4 @@
 using Newtonsoft.Json.Linq;
-using Overlayer.Compat;
 using Overlayer.Core;
 using Overlayer.IO.Fx;
 using Overlayer.IO.Overlay;
@@ -597,7 +596,7 @@ public static class KvImporter {
         obj.Config.ContentSizeFitterConfig = new ContentSizeFitterSettings();
         tmp.RichText.Value = true;
         tmp.EnableShadow.Value = false;
-        tmp.TextWrappingMode.Value = TmpCompat.NoWrap;
+        tmp.TextWrappingMode.Value = 0; // NoWrap
         tmp.OverFlowMode.Value = TextOverflowModes.Overflow;
         bool gradEither = color.Released.GradientEnabled || color.Pressed.GradientEnabled;
         if (isDummy || GColorSame(color.Released, color.Pressed)) {
