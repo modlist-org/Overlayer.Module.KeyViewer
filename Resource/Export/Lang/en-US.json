@@ -1,0 +1,22 @@
+{
+  "en-US": {
+    "0KTL": "DO_NOT_TRANSLATE_THIS_KEY!",
+    "0NATIVELANG": "English",
+    "0TRANSLATORS": [
+      "OVERLAYER"
+    ],
+    "KEYVIEWER": "KeyViewer",
+    "KEYVIEWER_DESC": "Imports KeyViewer v4 profiles (*.json) into an Overlayer Canvas, including held-state transitions, KeyViewer-style easing, and Rain trails. Positions remain editable in the Overlayer inspector.",
+    "KEYVIEWER_PATH_PH": "KeyViewer profile JSON path",
+    "KEYVIEWER_NAME_PH": "Canvas profile name",
+    "KEYVIEWER_INCLUDE_COUNT": "Include Count Text",
+    "KEYVIEWER_IMPORT_IMAGES": "Import Custom Images",
+    "KEYVIEWER_IMPORT": "Import To Canvas",
+    "KEYVIEWER_READY": "Ready.",
+    "KEYVIEWER_FILE_SELECTED": "File selected. Press Import To Canvas.",
+    "KEYVIEWER_NO_FILE": "Profile JSON file not found.",
+    "KEYVIEWER_IMPORTING": "Importing...",
+    "DESC_KEYVIEWER_IMPORT_IMAGES": "Copies profile References and image/font files into UserResources",
+    "BROWSE": "Browse"
+  }
+}

@@ -1,0 +1,6 @@
+<Project>
+    <PropertyGroup>
+        <GamePath>/path/to/game</GamePath>
+        <GameData>ADanceOfFireAndIce_Data</GameData>
+    </PropertyGroup>
+</Project>
