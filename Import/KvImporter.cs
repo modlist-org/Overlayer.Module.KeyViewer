@@ -336,7 +336,7 @@ public static class KvImporter {
             root2.ApplyConfig();
             BuildKeys(root2, profile, identity, sourcePath, includeCountText, importImages, refMap, fontMap, profileCodes, result.Warnings);
             canvas.ApplyConfig();
-            KvRainStore.SaveAndAttach(canvas, profile, sourcePath, importImages, refMap, includeCountText);
+            KvRainStore.DeleteSidecar(canvasName);
             OverlayCore.RequestLayoutRefresh();
             OverlayCore.SaveAllCanvases();
         } catch (Exception e) {
@@ -464,6 +464,9 @@ public static class KvImporter {
                     k.KeyRotation.PressedEase, k.KeyRotation.ReleasedEase, codes, stateId + ".rotation.z");
                 krt.Scale = Motion2As3(k.KeyScale, codes, stateId + ".scale");
             }
+            if (k.RainEnabled && !k.IsDummy) {
+                keyObj.Config.RainConfig = BuildRain(k, showCount, codes, stateId, sourcePath, importImages, refMap, identity.Prefix, warnings);
+            }
             root.Attach(keyObj);
             keyObj.ApplyComponent();
             keyObj.ApplyConfig();
@@ -515,6 +518,41 @@ public static class KvImporter {
                 keyObj.Attach(count);
             }
         }
+    }
+
+    // KeyViewer v4 rain -> Overlayer Rain component. Pressed/released pairs become the same
+    // KV_EaseScalar Fx the key colors use; the key object is a zero-size point, so width and
+    // the start edge come from the key's 100 x (100|150) body.
+    private static RainSettings BuildRain(KvKey k, bool showCount, string codes, string stateId, string sourcePath,
+        bool importImages, Dictionary<string, string> refMap, string prefix, List<string> warnings) {
+        var rain = k.RainToken ?? new JObject();
+        string slot = stateId + ".rain";
+        var speed = KvRainController.ReadPair(rain["Speed"], 400f);
+        var length = KvRainController.ReadPair(rain["Length"], 400f);
+        var softness = KvRainController.ReadIntPair(rain["Softness"], 100);
+        var vector = rain["ObjectConfig"]?["VectorConfig"];
+        var offset = KvMotion2.FromToken(vector?["Offset"], Vector2.zero).Released;
+        var scale = KvMotion2.FromToken(vector?["Scale"], Vector2.one).Released;
+        var color = KvRainController.ReadColorMotion(rain["ObjectConfig"]?["Color"]);
+        var images = KvRainStore.ResolveRainImages(rain, k.DisplayName, sourcePath, importImages, refMap, prefix);
+        string sprite = images.OfType<JObject>().Select(i => i["SpriteKey"]?.Value<string>()).FirstOrDefault(s => !string.IsNullOrEmpty(s));
+
+        string direction = KvRainController.CanonicalDirection(rain["Direction"]?.Value<string>());
+        if (direction != "Up") warnings.Add($"Rain direction '{direction}' on key '{k.DisplayName}' isn't supported by the Rain component; it rains up.");
+        if (images.OfType<JObject>().Any(i => KvRainStore.ReadFloat(i["Roundness"], 0f) > 0f)) warnings.Add($"Rain roundness on key '{k.DisplayName}' isn't supported; use a rounded sprite.");
+        if (images.Count > 1) warnings.Add($"Key '{k.DisplayName}' has several rain images; only the first is used.");
+
+        return new RainSettings {
+            Active = FxValue<bool>.FromExpression("Tag.KV_IsKeyHeld(" + KvText.Quote(codes) + ")"),
+            Speed = MotionScalar(speed.released, speed.pressed, null, null, codes, slot + ".speed"),
+            Length = MotionScalar(length.released, length.pressed, null, null, codes, slot + ".length"),
+            FadeOut = MotionScalar(softness.released, softness.pressed, null, null, codes, slot + ".softness"),
+            Width = FxValue<float>.FromValue(100f * (scale.x > 0f ? scale.x : 1f)),
+            Offset = FxValue<Vector2>.FromValue(offset + new Vector2(0f, (showCount ? 150f : 100f) / 2f)),
+            Color = MotionTextColor(color, codes, slot + ".color"),
+            SpriteKey = FxValue<string>.FromValue(sprite),
+            MaxTrails = FxValue<int>.FromValue(Math.Max(32, KvRainStore.ReadInt(rain["PoolSize"], 32)))
+        };
     }
 
     private static OvObject NewImage(string name,

@@ -17,36 +17,12 @@ namespace Overlayer.Module.KeyViewer.Import;
 public static class KvRainStore {
     private static string Folder => Path.Combine(MainCore.Paths.ModulePath, "KeyViewer", "Rain");
 
-    public static void SaveAndAttach(OvCanvas canvas, KvProfile profile, string sourcePath,
-        bool importImages, Dictionary<string, string> refMap, bool includeCountText) {
-        if (canvas == null || profile == null) return;
-        var entries = new JArray();
-        string prefix = canvas.Config.Name.Value;
-        for (int i = 0; i < profile.Keys.Count; i++) {
-            var key = profile.Keys[i];
-            if (!key.RainEnabled) continue;
-            var images = ResolveRainImages(key.RainToken, key.DisplayName, sourcePath, importImages, refMap, prefix);
-            bool tall = includeCountText && key.EnableCountText;
-            entries.Add(new JObject {
-                ["Index"] = i,
-                ["Code"] = key.IsDummy ? string.Empty : key.Code,
-                ["Size"] = new JArray(100f * key.KeyScale.Released.x, (tall ? 150f : 100f) * key.KeyScale.Released.y),
-                ["Rain"] = key.RainToken.DeepClone(),
-                ["Images"] = images
-            });
-        }
-
-        string path = SidecarPath(canvas.Config.Name.Value);
-        if (entries.Count == 0) {
-            try { if (File.Exists(path)) File.Delete(path); } catch { }
-            return;
-        }
-        Directory.CreateDirectory(Folder);
-        File.WriteAllText(path, new JObject {
-            ["KeySpacing"] = profile.KeySpacing,
-            ["Entries"] = entries
-        }.ToString());
-        Attach(canvas, path);
+    // New imports use Overlayer's Rain component; drop any legacy sidecar left under this canvas name.
+    public static void DeleteSidecar(string canvasName) {
+        try {
+            string path = SidecarPath(canvasName);
+            if (File.Exists(path)) File.Delete(path);
+        } catch { }
     }
 
     public static void AttachExisting(IEnumerable<OvCanvas> canvases) {
@@ -78,7 +54,7 @@ public static class KvRainStore {
         }
     }
 
-    private static JArray ResolveRainImages(JObject rain, string keyName, string sourcePath,
+    internal static JArray ResolveRainImages(JObject rain, string keyName, string sourcePath,
         bool importImages, Dictionary<string, string> refMap, string prefix) {
         var images = new JArray();
         if (rain?["RainImages"] is not JArray source) return images;
@@ -387,7 +363,7 @@ public sealed class KvRainController : MonoBehaviour {
         }
     }
 
-    private static string CanonicalDirection(string raw) {
+    internal static string CanonicalDirection(string raw) {
         // KeyViewer Direction enums serialize canonically, but accept any
         // casing; anything unparseable falls back to Up like a fresh config.
         if (string.Equals(raw, "Down", StringComparison.OrdinalIgnoreCase)) return "Down";
@@ -593,19 +569,19 @@ public sealed class KvRainController : MonoBehaviour {
         B = Mathf.Lerp(a.B, b.B, t), A = Mathf.Lerp(a.A, b.A, t)
     };
 
-    private static (float released, float pressed) ReadPair(JToken node, float fallback) {
+    internal static (float released, float pressed) ReadPair(JToken node, float fallback) {
         float released = KvRainStore.ReadFloat(node?["Released"], fallback);
         float pressed = KvRainStore.ReadFloat(node?["Pressed"], released);
         return (released, pressed);
     }
 
-    private static (int released, int pressed) ReadIntPair(JToken node, int fallback) {
+    internal static (int released, int pressed) ReadIntPair(JToken node, int fallback) {
         int released = KvRainStore.ReadInt(node?["Released"], fallback);
         int pressed = KvRainStore.ReadInt(node?["Pressed"], released);
         return (released, pressed);
     }
 
-    private static KvMotionColor ReadColorMotion(JToken token) {
+    internal static KvMotionColor ReadColorMotion(JToken token) {
         var motion = new KvMotionColor();
         if (token == null) return motion;
         motion.Released = token["Released"] != null ? KvGColor.FromToken(token["Released"]) : motion.Released;
