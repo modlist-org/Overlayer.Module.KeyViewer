@@ -7,12 +7,12 @@
         <NeutralLanguage>en-US</NeutralLanguage>
         <AssemblyName>Overlayer.Module.KeyViewer</AssemblyName>
         <LangVersion>latest</LangVersion>
-        <OverlayerPath Condition="'$(OverlayerPath)' == ''">../Overlayer/Overlayer</OverlayerPath>
+        <OverlayerPath Condition="'$(OverlayerPath)' == ''">../../Overlayer/Overlayer</OverlayerPath>
     </PropertyGroup>
 
     <PropertyGroup>
         <!-- O5Kit (UI + input toolkit). Module is Mono-only: Debug/Release map to O5Kit *_Mono. -->
-        <O5KitProject>$(MSBuildProjectDirectory)/../O5Kit/src/O5Kit/O5Kit.csproj</O5KitProject>
+        <O5KitProject>$(MSBuildProjectDirectory)/../../O5Kit/src/O5Kit/O5Kit.csproj</O5KitProject>
         <O5KitConfiguration Condition="$(Configuration.Contains('Debug'))">Debug_Mono</O5KitConfiguration>
         <O5KitConfiguration Condition="!$(Configuration.Contains('Debug'))">Release_Mono</O5KitConfiguration>
     </PropertyGroup>
