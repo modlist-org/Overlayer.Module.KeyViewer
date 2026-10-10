@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.1</TargetFramework>
+        <TargetFramework>netstandard2.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <LangVersion>default</LangVersion>
         <NeutralLanguage>en-US</NeutralLanguage>
         <AssemblyName>Overlayer.Module.KeyViewer</AssemblyName>
         <LangVersion>latest</LangVersion>
@@ -20,22 +19,20 @@
     <ItemGroup>
         <ProjectReference Include="$(O5KitProject)">
             <SetConfiguration>Configuration=$(O5KitConfiguration)</SetConfiguration>
-            <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
+            <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
         </ProjectReference>
     </ItemGroup>
 
-    <PropertyGroup>
-        <NativeFileDialogVersion>1.2.0</NativeFileDialogVersion>
-    </PropertyGroup>
-
     <ItemGroup>
-        <PackageReference Include="NativeFileDialog.Extended" Version="$(NativeFileDialogVersion)" />
+        <Reference Include="NativeFileDialog.Extended">
+            <HintPath>$(OverlayerPath)/../tool/lib/NativeFileDialog.Extended.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <ItemGroup>
-        <Reference Include="Overlayer" HintPath="$(OverlayerPath)/bin/Release_ML/netstandard2.1/Overlayer.dll" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <Reference Include="Overlayer" HintPath="$(OverlayerPath)/bin/Release_ML/netstandard2.0/Overlayer.dll" />
         <Reference Include="0Harmony" HintPath="$(GamePath)/MelonLoader/net35/0Harmony.dll" />
-        <Reference Include="Newtonsoft.Json" HintPath="$(GamePath)/$(GameData)/Managed/Newtonsoft.Json.dll" />
         <Reference Include="Unity.TextMeshPro" HintPath="$(GamePath)/$(GameData)/Managed/Unity.TextMeshPro.dll" />
         <Reference Include="UnityEngine" HintPath="$(GamePath)/$(GameData)/Managed/UnityEngine.dll" />
         <Reference Include="UnityEngine.CoreModule" HintPath="$(GamePath)/$(GameData)/Managed/UnityEngine.CoreModule.dll" />
