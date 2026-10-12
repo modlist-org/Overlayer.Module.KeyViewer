@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <TargetFramework>netstandard2.1</TargetFramework>
         <Nullable>enable</Nullable>
         <NeutralLanguage>en-US</NeutralLanguage>
         <AssemblyName>Overlayer.Module.KeyViewer</AssemblyName>
@@ -19,7 +19,7 @@
     <ItemGroup>
         <ProjectReference Include="$(O5KitProject)">
             <SetConfiguration>Configuration=$(O5KitConfiguration)</SetConfiguration>
-            <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
+            <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
         </ProjectReference>
     </ItemGroup>
 
@@ -31,7 +31,7 @@
 
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <Reference Include="Overlayer" HintPath="$(OverlayerPath)/bin/Release_ML/netstandard2.0/Overlayer.dll" />
+        <Reference Include="Overlayer" HintPath="$(OverlayerPath)/bin/Release_ML/netstandard2.1/Overlayer.dll" />
         <Reference Include="0Harmony" HintPath="$(GamePath)/MelonLoader/net35/0Harmony.dll" />
         <Reference Include="Unity.TextMeshPro" HintPath="$(GamePath)/$(GameData)/Managed/Unity.TextMeshPro.dll" />
         <Reference Include="UnityEngine" HintPath="$(GamePath)/$(GameData)/Managed/UnityEngine.dll" />
