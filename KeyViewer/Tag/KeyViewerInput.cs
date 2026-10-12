@@ -11,9 +11,11 @@ namespace Overlayer.Module.KeyViewer.Tag;
 public static class KeyViewerInput {
     private static int cacheFrame = -1;
     private static readonly Dictionary<KeyCode, bool> held = new();
+    private static readonly Dictionary<string, KeyCode> keyCache = new(StringComparer.OrdinalIgnoreCase);
     private static int kpsFrame = -1;
     private static double kpsCache;
-    private static readonly Dictionary<string, EaseState> eased = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, Dictionary<string, EaseState>> eased = new(StringComparer.Ordinal);
+    private static int easedTotal;
 
     private sealed class EaseState {
         public bool Initialized;
@@ -23,6 +25,7 @@ public static class KeyViewerInput {
         public float StartTime;
         public float Duration;
         public string Ease = "Unset";
+        public O5Ease EaseEnum = O5Ease.Linear;
         public int CacheFrame = -1;
         public double CacheValue;
     }
@@ -35,10 +38,17 @@ public static class KeyViewerInput {
     /// </summary>
     [Tag(Name = "KV_IsKeyHeld", Desc = "[KeyViewer] Returns true while the specified Unity key is held. Ex) {KV_IsKeyHeld:A}, {KV_IsKeyHeld:Space}")]
     public static bool IsKeyHeld(string keyName) {
-        if (string.IsNullOrWhiteSpace(keyName)
-            || !Enum.TryParse(keyName.Trim(), true, out KeyCode key)
-            || key == KeyCode.None) {
+        if (string.IsNullOrWhiteSpace(keyName)) {
             return false;
+        }
+        if (!keyCache.TryGetValue(keyName, out KeyCode key)) {
+            if (!Enum.TryParse(keyName.Trim(), true, out key) || key == KeyCode.None) {
+                return false;
+            }
+            if (keyCache.Count > 1024) {
+                keyCache.Clear();
+            }
+            keyCache[keyName] = key;
         }
 
         int frame = Time.frameCount;
@@ -93,11 +103,20 @@ public static class KeyViewerInput {
         if (string.IsNullOrEmpty(slot)) return ParseNumber(releasedValue);
 
         int frame = Time.frameCount;
-        string stateKey = (keyCodes ?? string.Empty) + "\u001f" + slot;
-        if (!eased.TryGetValue(stateKey, out var state)) {
-            if (eased.Count > 8192) eased.Clear();
+        if (!eased.TryGetValue(keyCodes ?? string.Empty, out var inner)) {
+            inner = new Dictionary<string, EaseState>(StringComparer.Ordinal);
+            eased[keyCodes ?? string.Empty] = inner;
+        }
+        if (!inner.TryGetValue(slot, out var state)) {
+            if (easedTotal > 8192) {
+                eased.Clear();
+                easedTotal = 0;
+                inner = new Dictionary<string, EaseState>(StringComparer.Ordinal);
+                eased[keyCodes ?? string.Empty] = inner;
+            }
             state = new EaseState();
-            eased[stateKey] = state;
+            inner[slot] = state;
+            easedTotal++;
         }
         if (state.CacheFrame == frame) return state.CacheValue;
 
@@ -124,6 +143,7 @@ public static class KeyViewerInput {
             state.Pressed = isPressed;
             state.Duration = Math.Max(0f, ParseNumber(isPressed ? pressedDuration : releasedDuration));
             state.Ease = isPressed ? pressedEase : releasedEase;
+            state.EaseEnum = ParseEase(state.Ease);
         }
 
         state.CacheValue = Evaluate(state, now);
@@ -143,9 +163,12 @@ public static class KeyViewerInput {
     private static float Evaluate(EaseState state, float now) {
         if (state.Duration <= 0f) return state.To;
         float t = Mathf.Clamp01((now - state.StartTime) / state.Duration);
-        float easedT = EaseProgress(state.Ease, t);
+        float easedT = EvaluateEase(state.EaseEnum, t);
         return state.From + (state.To - state.From) * easedT;
     }
+
+    private static O5Ease ParseEase(string name) =>
+        Enum.TryParse(name, true, out O5Ease ease) ? ease : O5Ease.Linear;
 
     public static float EaseProgress(string name, float t) {
         // Overlayer's Ease system is the O5Ease enum. It exposes no public
